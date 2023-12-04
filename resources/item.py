@@ -19,6 +19,7 @@ class Item(MethodView):
         item = ItemModel.query.get_or_404(item_id)
         return item
 
+    @blp.doc(security=[{'HTTPBasic': []}])
     @jwt_required()
     def delete(self, item_id):
         jwt = get_jwt()
@@ -29,6 +30,7 @@ class Item(MethodView):
         db.session.commit()
         return {"message": "Item deleted."}
 
+    @blp.doc(security=[{'HTTPBasic': []}])
     @blp.arguments(ItemUpdateSchema)
     @blp.response(200, ItemSchema)
     def put(self, item_data, item_id):
@@ -44,30 +46,6 @@ class Item(MethodView):
         db.session.commit()
 
         return item
-
-
-# @blp.route("/item")
-# class ItemList(MethodView):
-#     @jwt_required()
-#     @blp.response(200, ItemSchema(many=True))
-#     def get(self):
-#         return ItemModel.query.all()
-#
-#     @jwt_required()
-#     @blp.doc(security=[{'HTTPBasic': []}])
-#
-#     @blp.arguments(ItemSchema)
-#     @blp.response(201, ItemSchema)
-#     def post(self, item_data):
-#         item = ItemModel(**item_data)
-#
-#         try:
-#             db.session.add(item)
-#             db.session.commit()
-#         except SQLAlchemyError:
-#             abort(500, message="An error occurred while inserting the item.")
-#
-#         return item
 
 
 @blp.route("/item")

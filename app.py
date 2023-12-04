@@ -6,8 +6,8 @@ from flask_migrate import Migrate
 import models
 import secrets
 from blocklist import BLOCKLIST
-
 from db import db
+
 from resources.item import blp as ItemBlueprint
 from resources.store import blp as StoreBlueprint
 from resources.tag import blp as TagBlueprint
@@ -103,3 +103,5 @@ def create_app(db_url=None):
     api.register_blueprint(UserBlueprint)
 
     return app
+
+

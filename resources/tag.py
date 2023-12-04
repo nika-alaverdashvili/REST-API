@@ -14,27 +14,28 @@ class TagsInStore(MethodView):
     @blp.response(200, TagSchema(many=True))
     def get(self, store_id):
         store = StoreModel.query.get_or_404(store_id)
-
         return store.tags.all()  # lazy="dynamic" means 'tags' is a query
 
-    @blp.arguments(TagSchema)
-    @blp.response(201, TagSchema)
+    @blp.arguments(TagSchema(many=True))  # Accepting many tags
+    @blp.response(201, TagSchema(many=True))
     def post(self, tag_data, store_id):
-        if TagModel.query.filter(TagModel.store_id == store_id, TagModel.name == tag_data["name"]).first():
-            abort(400, message="A tag with that name already exists in that store.")
+        existing_tags = TagModel.query.filter(TagModel.store_id == store_id,
+                                              TagModel.name.in_([tag['name'] for tag in tag_data])).all()
 
-        tag = TagModel(**tag_data, store_id=store_id)
+        if existing_tags:
+            existing_tag_names = [tag.name for tag in existing_tags]
+            abort(400, message=f"Tags with names {existing_tag_names} already exist in that store.")
+
+        tags = [TagModel(**tag, store_id=store_id) for tag in tag_data]
 
         try:
-            db.session.add(tag)
+            db.session.add_all(tags)
             db.session.commit()
         except SQLAlchemyError as e:
-            abort(
-                500,
-                message=str(e),
-            )
+            abort(500, message=str(e))
 
-        return tag
+        return tags
+
 
 
 @blp.route("/item/<int:item_id>/tag/<int:tag_id>")
